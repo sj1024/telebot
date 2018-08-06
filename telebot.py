@@ -130,67 +130,67 @@ class DeviceAircon(Menu):
         msg  = '\n타이머를 선택하세요'
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 삽십분 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 삽십분 ~ ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 한시간 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 한시간 ~ ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 한시간 삼십분 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 한시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 두시간 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 두시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 두시간 삼십분 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 두시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 세시간 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 세시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 세시간 삼십분 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 세시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 네시간 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 네시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 네시간 삼십분 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 네시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 다섯시간 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 다섯시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 다섯시간 삼십분 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 다섯시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 여섯시간 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 여섯시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 여섯시간 삼십분 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 여섯시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 일곱시간 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 일곱시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 일곱시간 삼십분 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 일곱시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 여덟시간 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 여덟시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 여덟시간 삼십분 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 여덟시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 아홉시간 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 아홉시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 아홉시간 삼십분 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 아홉시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 열시간 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 열시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 열시간 삼십분 %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg += '\n/%03d 열시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
         return msg
     def msg(self, m):
         if self.phase == 'WAITINGTIMER':
