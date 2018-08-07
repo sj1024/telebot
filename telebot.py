@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: utf8 -*-
+ # -*- coding: utf8 -*-
 # vim: set rnu sw=4 ss=4 ts=4 et smartindent fdm=indent :
 import sys
 import time
@@ -9,6 +9,8 @@ import requests
 import datetime
 import re
 import time
+from telepot.loop import MessageLoop
+from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 from pprint import pprint
 from myconfig import MYTOKEN
 
@@ -28,7 +30,8 @@ class Menu:
     def setcmd(self, cmd):
         self.cmd.append(cmd)
     def common(self):
-        return '............  🏠 /start    ⬅️  /back';
+        return [[InlineKeyboardButton(text='🏠 시작', callback_data='/start')],
+           [InlineKeyboardButton(text='⬅️  뒤로', callback_data='/back')]]
     def setup(self):
         pass
     def msg(self, m):
@@ -41,11 +44,11 @@ class Menu:
 
         return -1
     def menu(self): 
-        menu = ''
+        menu = [] 
         if self.child:
             for m in self.child:
-                menu += '\n' + m.name + ' : ' +  m.desc
-        return menu
+                menu.append({'desc': m.desc, 'name': m.name})
+        return {'desc':self.desc, 'menu':menu}
     def getchild(self):
         if self.child:
             return self.child
@@ -57,18 +60,22 @@ class Menu:
             return self.parent
         else:
             return -1
+
 class DeviceAircon(Menu):
     def __init__(self, name, desc, ip):
         self.name   = name
         self.desc   = desc 
         self.ip     = ip
-        self.cmd    = [['/on','에어컨 켜기'], ['/off', '에어컨 끄기'], ['/status','에어컨 상태보기']]
+        self.cmd    = [{'desc':'에어컨 켜기', 'name':'/on'}, {'desc':'에어컨 끄기', 'name':'/off'}, {'desc':'에어컨 상태보기', 'name':'/status'}]
         self.di     = ''
         self.timer  = ''
         self.phase  = ''
     def setup(self):
         self.phase = ''
+    def menu(self):
+        return {'menu':self.cmd, 'desc':self.desc}
     def rcmd(self, key):
+        print 'http://' + self.ip + '/' + key
         fcmd = 'http://'
         fcmd += self.ip
         fcmd += '/'
@@ -77,7 +84,6 @@ class DeviceAircon(Menu):
             time.sleep(1)
         r = requests.get(fcmd)  # get status
         j = r.json()[u'variables']
-
         msg = ''
         msg += '\n에어컨 상태: %s' % (j['Status Cool'])
         msg += '\n방 온도: %s' % (j['Temp'])
@@ -85,113 +91,125 @@ class DeviceAircon(Menu):
         msg += '\n방 불쾌지수: %s' % (j['DI'])
         msg += '\n타이머 남은 시간(분): %s' % (j['timer_ctrl'])
         msg += '\n설정된 불쾌지수: %s' % (j['di_ctrl'])
-
         '''
         {"Status Heat":"RELAY_OFF","Temp":34.0,"DI":79.34,
         "timer_ctrl":87,"Humi":24.0,"di_ctrl":79,"Status Cool":"RELAY_ON","heat_ctrl":-999}
         
         '''
         return msg
-    def menu(self):
-        msg =''
-        for c in self.cmd:
-            msg += '\n' + c[0] 
-            msg += ': ' + c[1]
-        return msg
     def menu_di(self):
-        status = 'waiting di'
-        msg  = '\n불쾌지수를 선택하세요'
-        msg += '\n/068 불쾌감을 느끼는 사람 없음'
-        msg += '\n/069'
-        msg += '\n/070'
-        msg += '\n/071'
-        msg += '\n/072'
-        msg += '\n/073'
-        msg += '\n/074'
-        msg += '\n/075 약 50% 인간이 불쾌감을 느끼기 시작함'
-        msg += '\n/076'
-        msg += '\n/077'
-        msg += '\n/078'
-        msg += '\n/079'
-        msg += '\n/080 모든 인간이 불쾌감을 느끼기 시작함'
-        msg += '\n/081'
-        msg += '\n/082'
-        msg += '\n/083'
-        msg += '\n/084'
-        msg += '\n/085'
-        msg += '\n/086'
-        msg += '\n/087'
-        msg += '\n/088'
-        msg += '\n/089'
-        return msg
+        menu=[]
+        menu.append({'desc':'68 불쾌감을 느끼는 사람 없음', 'name':'/068'})
+        menu.append({'desc':'69', 'name':'/069'})
+        menu.append({'desc':'70', 'name':'/070'})
+        menu.append({'desc':'71', 'name':'/071'})
+        menu.append({'desc':'72', 'name':'/072'})
+        menu.append({'desc':'73', 'name':'/073'})
+        menu.append({'desc':'74', 'name':'/074'})
+        menu.append({'desc':'75 약 50% 인간이 불쾌감을 느끼기 시작함', 'name':'/075'})
+        menu.append({'desc':'76', 'name':'/076'})
+        menu.append({'desc':'77', 'name':'/077'})
+        menu.append({'desc':'78', 'name':'/078'})
+        menu.append({'desc':'79', 'name':'/079'})
+        menu.append({'desc':'80 모든 인간이 불쾌감을 느끼기 시작함' , 'name':'/080'})
+        menu.append({'desc':'81', 'name':'/081'})
+        menu.append({'desc':'82', 'name':'/082'})
+        menu.append({'desc':'83', 'name':'/083'})
+        menu.append({'desc':'84', 'name':'/084'})
+        menu.append({'desc':'85', 'name':'/085'})
+        menu.append({'desc':'86', 'name':'/086'})
+        menu.append({'desc':'87', 'name':'/087'})
+        menu.append({'desc':'88', 'name':'/088'})
+        menu.append({'desc':'89', 'name':'/089'})
+        return {'desc':'불쾌지수를 설정합니다', 'menu':menu}
     def menu_timer(self):
-        m = 0
         d = datetime.datetime.now()
-        msg  = '\n타이머를 선택하세요'
+        menu = []
+        m = 30
+        d += datetime.timedelta(minutes=30)
+        msg = '삽십분 ~ ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 삽십분 ~ ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '한시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 한시간 ~ ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '한시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 한시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '두시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 두시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '두시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 두시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '세시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 세시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '세시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 세시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '네시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 네시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '네시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 네시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '다섯시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 다섯시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '다섯시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 다섯시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '여섯시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 여섯시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '여섯시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 여섯시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '일곱시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 일곱시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '일곱시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 일곱시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '여덟시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 여덟시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '여덟시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 여덟시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '아홉시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 아홉시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '아홉시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 아홉시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
+        msg = '열시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 열시간 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
-        m += 30
-        d += datetime.timedelta(minutes=30)
-        msg += '\n/%03d 열시간 삼십분 ~ %s' % (m, d.strftime('%m-%d %H:%M'))
-        return msg
+        msg = '열시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        menu.append({'desc':msg, 'name':'/%03d' % m})
+        return {'desc':'타이머를 설정합니다', 'menu':menu}
     def msg(self, m):
         if self.phase == 'WAITINGTIMER':
             self.timer = m[1:]
@@ -225,57 +243,132 @@ class DeviceAircon(Menu):
             self.phase = ''
             return -1
 
+class DeviceTemp(Menu):
+    def __init__(self, name, desc, ip):
+        self.name   = name
+        self.desc   = desc 
+        self.ip     = ip
+        self.cmd    = [{'desc':'온/습도 불쾌지수 보기', 'name':'/status'}]
+        self.di     = ''
+        self.timer  = ''
+    def setup(self):
+        pass
+    def menu(self):
+        return {'menu':self.cmd, 'desc':self.desc}
+    def rcmd(self):
+        fcmd = 'http://'
+        fcmd += self.ip
+        fcmd += '/'
+        r = requests.get(fcmd)  # get status
+        j = r.json()[u'variables']
+        msg = ''
+        msg += '\n방 온도: %s' % (j['Temp'])
+        msg += '\n방 습도: %s' % (j['Humi'])
+        msg += '\n방 불쾌지수: %s' % (j['DI'])
+        '''
+        {"Status Heat":"RELAY_OFF","Temp":34.0,"DI":79.34,
+        "timer_ctrl":87,"Humi":24.0,"di_ctrl":79,"Status Cool":"RELAY_ON","heat_ctrl":-999}
+        
+        '''
+        return msg
+    def msg(self, m):
+        if(m == '/status'):
+            return self.rcmd()
+        else:
+            return -1
+
+def handle(msg, chat_id):
+    global activemenu
+    if msg == '/back':
+        if activemenu != home:
+            activemenu = activemenu.getparent()
+        r= activemenu.menu()
+        __keyboard = []
+        for m in r['menu']:
+            __keyboard.append([InlineKeyboardButton(text=m['desc'], callback_data=m['name'])])
+        __keyboard = __keyboard + activemenu.common()
+        keyboard = InlineKeyboardMarkup(inline_keyboard=__keyboard)
+        bot.sendMessage(chat_id, r['desc'], reply_markup=keyboard)
+    elif msg == '/start':
+        activemenu = home
+        r = activemenu.menu()
+        __keyboard = []
+        for m in r['menu']:
+            __keyboard.append([InlineKeyboardButton(text=m['desc'], callback_data=m['name'])])
+        __keyboard = __keyboard + activemenu.common()
+        keyboard = InlineKeyboardMarkup(inline_keyboard=__keyboard)
+        bot.sendMessage(chat_id, r['desc'], reply_markup=keyboard)
+    else:
+        __msg = activemenu.msg(msg)
+        if __msg != -1:
+            nextmsg = __msg
+            if isinstance(nextmsg, Menu):
+                activemenu = nextmsg
+                r=activemenu.menu()
+                __keyboard = []
+                for m in r['menu']:
+                    __keyboard.append([InlineKeyboardButton(text=m['desc'], callback_data=m['name'])])
+                __keyboard = __keyboard + activemenu.common()
+                keyboard = InlineKeyboardMarkup(inline_keyboard=__keyboard)
+                bot.sendMessage(chat_id, r['desc'], reply_markup=keyboard)
+            else:
+                r = nextmsg
+                if r == {}:
+                    __keyboard = []
+                    for m in r['menu']:
+                        __keyboard.append([InlineKeyboardButton(text=m['desc'], callback_data=m['name'])])
+                    __keyboard = __keyboard + activemenu.common()
+                    keyboard = InlineKeyboardMarkup(inline_keyboard=__keyboard)
+                    bot.sendMessage(chat_id, r['desc'], reply_markup=keyboard)
+                else:
+                    bot.sendMessage(chat_id, r)
+
+        else:
+            msg = '\n\n뭔가 잘못되었어요 ㅠㅠ'
+            bot.sendMessage(chat_id, msg)
+
+def on_chat_message(msg):
+    content_type, chat_type, chat_id = telepot.glance(msg)
+    handle(msg['text'], chat_id)
+
+def on_callback_query(msg):
+    query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
+    bot.answerCallbackQuery(query_id, text='Got it')
+    handle(query_data, from_id)
+
 home    = Menu('/start', '시작하기')
 bedroom = Menu('/bedroom', '침실 작업')
 library = Menu('/library', '서재 작업')
-aircon0 = DeviceAircon('/aircon', '침실 에어컨', '192.168.0.25')
-aircon1 = DeviceAircon('/aircon', '서재 에어컨', '192.168.0.26')
+aircon0 = DeviceAircon('/aircon', '에어컨', '192.168.0.25')
+temp0 = DeviceTemp('/temp', '온습도계', '192.168.0.25')
+aircon1 = DeviceAircon('/aircon', '에어컨', '192.168.0.26')
+temp1 = DeviceTemp('/temp', '온습도계', '192.168.0.26')
 
 home.addchild(bedroom) 
 home.addchild(library)
 
 bedroom.parent(home)
 bedroom.addchild(aircon0)
+bedroom.addchild(temp0)
 
 library.parent(home)
 library.addchild(aircon1)
+library.addchild(temp1)
 
 aircon0.parent(bedroom)
 aircon1.parent(library)
 
-
-def handle(msg):
-    chat_id  = msg['chat']['id']
-    command = msg['text']
-    msg = ''
-    print 'Got command: %s %s' % (command, datetime.datetime.now().strftime('%m-%d %H:%M'))
-    if command == '/back':
-        if handle.activemenu != home : 
-            handle.activemenu = handle.activemenu.getparent()
-        msg = handle.activemenu.menu()
-    elif command == '/start':
-        handle.activemenu = home
-        msg = home.menu()
-    else:
-        __msg = handle.activemenu.msg(command) 
-        if __msg  != -1:
-            nextmsg = __msg
-            if isinstance(nextmsg, Menu):
-                handle.activemenu = nextmsg
-                msg = nextmsg.menu()
-            else:
-                msg = nextmsg
-        else: 
-            msg = '\n\n뭔가 잘못되었어요 ㅠㅠ'
-    bot.sendMessage(chat_id, msg)
-    bot.sendMessage(chat_id,  handle.activemenu.common())
-
-handle.activemenu = home
+temp0.parent(bedroom)
+temp1.parent(library)
 
 bot = telepot.Bot(MYTOKEN)
-bot.message_loop(handle)
 
-print 'I am listening ...'
+activemenu = home
+
+MessageLoop(bot, {'chat': on_chat_message,
+                  'callback_query': on_callback_query}).run_as_thread()
+print('Listening ...')
+
 while 1:
     time.sleep(10)
 
