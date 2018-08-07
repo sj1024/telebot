@@ -10,7 +10,7 @@ import datetime
 import re
 import time
 from telepot.loop import MessageLoop
-from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
+from telepot.namedtuple import ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 from pprint import pprint
 from myconfig import MYTOKEN
 
@@ -30,8 +30,7 @@ class Menu:
     def setcmd(self, cmd):
         self.cmd.append(cmd)
     def common(self):
-        return [[InlineKeyboardButton(text='🏠 시작', callback_data='/start')],
-           [InlineKeyboardButton(text='⬅️  뒤로', callback_data='/back')]]
+        return [[InlineKeyboardButton(text='🏠 시작', callback_data='/start'), InlineKeyboardButton(text='↩️  뒤로', callback_data='/back')]]
     def setup(self):
         pass
     def msg(self, m):
@@ -66,7 +65,7 @@ class DeviceAircon(Menu):
         self.name   = name
         self.desc   = desc 
         self.ip     = ip
-        self.cmd    = [{'desc':'에어컨 켜기', 'name':'/on'}, {'desc':'에어컨 끄기', 'name':'/off'}, {'desc':'에어컨 상태보기', 'name':'/status'}]
+        self.cmd    = [{'desc':'에어컨 켜기', 'name':'/on'}, {'desc':'에어컨 끄기', 'name':'/off'}, {'desc':'⚙️  에어컨 상태보기', 'name':'/status'}]
         self.di     = ''
         self.timer  = ''
         self.phase  = ''
@@ -84,13 +83,13 @@ class DeviceAircon(Menu):
             time.sleep(1)
         r = requests.get(fcmd)  # get status
         j = r.json()[u'variables']
-        msg = ''
-        msg += '\n에어컨 상태: %s' % (j['Status Cool'])
-        msg += '\n방 온도: %s' % (j['Temp'])
-        msg += '\n방 습도: %s' % (j['Humi'])
-        msg += '\n방 불쾌지수: %s' % (j['DI'])
-        msg += '\n타이머 남은 시간(분): %s' % (j['timer_ctrl'])
-        msg += '\n설정된 불쾌지수: %s' % (j['di_ctrl'])
+        msg = 'ℹ️ '
+        msg += '\n❄️  에어컨 상태: %s' % (j['Status Cool'])
+        msg += '\n🌡  방 온도: %s' % (j['Temp'])
+        msg += '\n💦 방 습도: %s' % (j['Humi'])
+        msg += '\n😕 방 불쾌지수: %s' % (j['DI'])
+        msg += '\n⏰ 타이머 남은 시간(분): %s' % (j['timer_ctrl'])
+        msg += '\n⚙️  설정된 불쾌지수: %s' % (j['di_ctrl'])
         '''
         {"Status Heat":"RELAY_OFF","Temp":34.0,"DI":79.34,
         "timer_ctrl":87,"Humi":24.0,"di_ctrl":79,"Status Cool":"RELAY_ON","heat_ctrl":-999}
@@ -99,28 +98,28 @@ class DeviceAircon(Menu):
         return msg
     def menu_di(self):
         menu=[]
-        menu.append({'desc':'68 불쾌감을 느끼는 사람 없음', 'name':'/068'})
-        menu.append({'desc':'69', 'name':'/069'})
+        menu.append({'desc':'68, 😄 불쾌감을 느끼는 사람 없음', 'name':'/068'})
+        menu.append({'desc':'69',  'name':'/069'})
         menu.append({'desc':'70', 'name':'/070'})
         menu.append({'desc':'71', 'name':'/071'})
-        menu.append({'desc':'72', 'name':'/072'})
+        menu.append({'desc':'72, 😕', 'name':'/072'})
         menu.append({'desc':'73', 'name':'/073'})
         menu.append({'desc':'74', 'name':'/074'})
-        menu.append({'desc':'75 약 50% 인간이 불쾌감을 느끼기 시작함', 'name':'/075'})
+        menu.append({'desc':'75, ☹️  약 50% 인간이 불쾌감을 느끼기 시작함', 'name':'/075'})
         menu.append({'desc':'76', 'name':'/076'})
         menu.append({'desc':'77', 'name':'/077'})
         menu.append({'desc':'78', 'name':'/078'})
         menu.append({'desc':'79', 'name':'/079'})
-        menu.append({'desc':'80 모든 인간이 불쾌감을 느끼기 시작함' , 'name':'/080'})
+        menu.append({'desc':'80, 😣 모든 인간이 불쾌감을 느끼기 시작함' , 'name':'/080'})
         menu.append({'desc':'81', 'name':'/081'})
         menu.append({'desc':'82', 'name':'/082'})
         menu.append({'desc':'83', 'name':'/083'})
         menu.append({'desc':'84', 'name':'/084'})
-        menu.append({'desc':'85', 'name':'/085'})
+        menu.append({'desc':'85, 😩', 'name':'/085'})
         menu.append({'desc':'86', 'name':'/086'})
         menu.append({'desc':'87', 'name':'/087'})
         menu.append({'desc':'88', 'name':'/088'})
-        menu.append({'desc':'89', 'name':'/089'})
+        menu.append({'desc':'89, 😫', 'name':'/089'})
         return {'desc':'불쾌지수를 설정합니다', 'menu':menu}
     def menu_timer(self):
         d = datetime.datetime.now()
@@ -209,7 +208,7 @@ class DeviceAircon(Menu):
         d += datetime.timedelta(minutes=30)
         msg = '열시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
-        return {'desc':'타이머를 설정합니다', 'menu':menu}
+        return {'desc':'⏰ 타이머를 설정합니다', 'menu':menu}
     def msg(self, m):
         if self.phase == 'WAITINGTIMER':
             self.timer = m[1:]
@@ -248,7 +247,7 @@ class DeviceTemp(Menu):
         self.name   = name
         self.desc   = desc 
         self.ip     = ip
-        self.cmd    = [{'desc':'온/습도 불쾌지수 보기', 'name':'/status'}]
+        self.cmd    = [{'desc':'🌡  온/습도 불쾌지수 보기', 'name':'/status'}]
         self.di     = ''
         self.timer  = ''
     def setup(self):
@@ -261,10 +260,10 @@ class DeviceTemp(Menu):
         fcmd += '/'
         r = requests.get(fcmd)  # get status
         j = r.json()[u'variables']
-        msg = ''
-        msg += '\n방 온도: %s' % (j['Temp'])
-        msg += '\n방 습도: %s' % (j['Humi'])
-        msg += '\n방 불쾌지수: %s' % (j['DI'])
+        msg = 'ℹ️ '
+        msg += '\n🌡  방 온도: %s' % (j['Temp'])
+        msg += '\n💦 방 습도: %s' % (j['Humi'])
+        msg += '\n😕 방 불쾌지수: %s' % (j['DI'])
         '''
         {"Status Heat":"RELAY_OFF","Temp":34.0,"DI":79.34,
         "timer_ctrl":87,"Humi":24.0,"di_ctrl":79,"Status Cool":"RELAY_ON","heat_ctrl":-999}
@@ -290,6 +289,8 @@ def handle(msg, chat_id):
         keyboard = InlineKeyboardMarkup(inline_keyboard=__keyboard)
         bot.sendMessage(chat_id, r['desc'], reply_markup=keyboard)
     elif msg == '/start':
+        markup = ReplyKeyboardRemove()
+        bot.sendMessage(chat_id, '시작합니다', reply_markup=markup)
         activemenu = home
         r = activemenu.menu()
         __keyboard = []
@@ -298,6 +299,7 @@ def handle(msg, chat_id):
         __keyboard = __keyboard + activemenu.common()
         keyboard = InlineKeyboardMarkup(inline_keyboard=__keyboard)
         bot.sendMessage(chat_id, r['desc'], reply_markup=keyboard)
+
     else:
         __msg = activemenu.msg(msg)
         if __msg != -1:
@@ -313,7 +315,7 @@ def handle(msg, chat_id):
                 bot.sendMessage(chat_id, r['desc'], reply_markup=keyboard)
             else:
                 r = nextmsg
-                if r == {}:
+                if type(r) == dict: 
                     __keyboard = []
                     for m in r['menu']:
                         __keyboard.append([InlineKeyboardButton(text=m['desc'], callback_data=m['name'])])
@@ -336,13 +338,13 @@ def on_callback_query(msg):
     bot.answerCallbackQuery(query_id, text='Got it')
     handle(query_data, from_id)
 
-home    = Menu('/start', '시작하기')
-bedroom = Menu('/bedroom', '침실 작업')
-library = Menu('/library', '서재 작업')
-aircon0 = DeviceAircon('/aircon', '에어컨', '192.168.0.25')
-temp0 = DeviceTemp('/temp', '온습도계', '192.168.0.25')
-aircon1 = DeviceAircon('/aircon', '에어컨', '192.168.0.26')
-temp1 = DeviceTemp('/temp', '온습도계', '192.168.0.26')
+home    = Menu('/start', '🏠 시작하기')
+bedroom = Menu('/bedroom', '🛏  침실 작업')
+library = Menu('/library', '💻 서재 작업')
+aircon0 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.25')
+temp0 = DeviceTemp('/temp', '🌡  온습도계', '192.168.0.25')
+aircon1 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.26')
+temp1 = DeviceTemp('/temp', '🌡  온습도계', '192.168.0.26')
 
 home.addchild(bedroom) 
 home.addchild(library)
