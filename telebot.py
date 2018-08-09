@@ -21,11 +21,13 @@ class Menu:
     def __init__(self, name, desc):
         self.name = name
         self.desc = desc
+        self.parent = None
         self.child=[]
         self.cmd=[]
+        self.bread=[]
     def addchild(self, child):
         self.child.append(child)
-    def parent(self, parent):
+    def setparent(self, parent):
         self.parent = parent
     def setcmd(self, cmd):
         self.cmd.append(cmd)
@@ -40,14 +42,24 @@ class Menu:
                 if c.name == m:
                     c.setup()
                     return c
-
         return -1
+    def getbreadcrumb(self, buf=None): 
+        if buf ==None:
+            buf=[]
+        buf.insert(0, self.desc)
+        if self.getparent() != -1:
+            return self.getparent().getbreadcrumb(buf)
+        else:
+            r=''
+            for b in buf:
+                r += b + ' » '
+            return r[:-3]
     def menu(self): 
         menu = [] 
         if self.child:
             for m in self.child:
-                menu.append({'desc': m.desc, 'name': m.name})
-        return {'desc':self.desc, 'menu':menu}
+                menu.append({'name': m.name, 'desc': m.desc})
+        return {'menu':menu, 'desc':self.getbreadcrumb()}
     def getchild(self):
         if self.child:
             return self.child
@@ -62,8 +74,7 @@ class Menu:
 
 class DeviceAircon(Menu):
     def __init__(self, name, desc, ip):
-        self.name   = name
-        self.desc   = desc 
+        Menu.__init__(self, name, desc)
         self.ip     = ip
         self.cmd    = [{'desc':'에어컨 켜기', 'name':'/on'}, {'desc':'에어컨 끄기', 'name':'/off'}, {'desc':'⚙️  에어컨 상태보기', 'name':'/status'}]
         self.di     = ''
@@ -72,7 +83,7 @@ class DeviceAircon(Menu):
     def setup(self):
         self.phase = ''
     def menu(self):
-        return {'menu':self.cmd, 'desc':self.desc}
+        return {'menu':self.cmd, 'desc':self.getbreadcrumb()}
     def rcmd(self, key):
         print 'http://' + self.ip + '/' + key
         fcmd = 'http://'
@@ -85,11 +96,13 @@ class DeviceAircon(Menu):
         j = r.json()[u'variables']
         msg = 'ℹ️ '
         msg += '\n❄️  에어컨 상태: %s' % (j['Status Cool'])
-        msg += '\n🌡  방 온도: %s' % (j['Temp'])
+        msg += '\n🔥 히터 상태: %s' % (j['Status Heat'])
+        msg += '\n🌡 방 온도: %s' % (j['Temp'])
         msg += '\n💦 방 습도: %s' % (j['Humi'])
         msg += '\n😕 방 불쾌지수: %s' % (j['DI'])
         msg += '\n⏰ 타이머 남은 시간(분): %s' % (j['timer_ctrl'])
         msg += '\n⚙️  설정된 불쾌지수: %s' % (j['di_ctrl'])
+        msg += '\n⚙️  설정된 히터온도: %s' % (j['heat_ctrl'])
         '''
         {"Status Heat":"RELAY_OFF","Temp":34.0,"DI":79.34,
         "timer_ctrl":87,"Humi":24.0,"di_ctrl":79,"Status Cool":"RELAY_ON","heat_ctrl":-999}
@@ -242,92 +255,54 @@ class DeviceAircon(Menu):
             self.phase = ''
             return -1
 
-class DeviceTemp(Menu):
+class DeviceTemp(DeviceAircon):
     def __init__(self, name, desc, ip):
-        self.name   = name
-        self.desc   = desc 
-        self.ip     = ip
+        DeviceAircon.__init__(self, name, desc, ip)
         self.cmd    = [{'desc':'🌡  온/습도 불쾌지수 보기', 'name':'/status'}]
-        self.di     = ''
-        self.timer  = ''
-    def setup(self):
-        pass
-    def menu(self):
-        return {'menu':self.cmd, 'desc':self.desc}
-    def rcmd(self):
-        fcmd = 'http://'
-        fcmd += self.ip
-        fcmd += '/'
-        r = requests.get(fcmd)  # get status
-        j = r.json()[u'variables']
-        msg = 'ℹ️ '
-        msg += '\n🌡  방 온도: %s' % (j['Temp'])
-        msg += '\n💦 방 습도: %s' % (j['Humi'])
-        msg += '\n😕 방 불쾌지수: %s' % (j['DI'])
-        '''
-        {"Status Heat":"RELAY_OFF","Temp":34.0,"DI":79.34,
-        "timer_ctrl":87,"Humi":24.0,"di_ctrl":79,"Status Cool":"RELAY_ON","heat_ctrl":-999}
-        
-        '''
-        return msg
     def msg(self, m):
         if(m == '/status'):
-            return self.rcmd()
+            return self.rcmd('')
         else:
             return -1
+
+def getInlineButton(chat_id, menu):
+    __keyboard = []
+    for m in menu['menu']:
+        __keyboard.append([InlineKeyboardButton(text=m['desc'], callback_data=m['name'])])
+    __keyboard = __keyboard + activemenu.common()
+    keyboard = InlineKeyboardMarkup(inline_keyboard=__keyboard)
+    bot.sendMessage(chat_id, menu['desc'], reply_markup=keyboard)
+    return 
 
 def handle(msg, chat_id):
     global activemenu
     if msg == '/back':
         if activemenu != home:
             activemenu = activemenu.getparent()
-        r= activemenu.menu()
-        __keyboard = []
-        for m in r['menu']:
-            __keyboard.append([InlineKeyboardButton(text=m['desc'], callback_data=m['name'])])
-        __keyboard = __keyboard + activemenu.common()
-        keyboard = InlineKeyboardMarkup(inline_keyboard=__keyboard)
-        bot.sendMessage(chat_id, r['desc'], reply_markup=keyboard)
+        getInlineButton(chat_id, activemenu.menu())
     elif msg == '/start':
         markup = ReplyKeyboardRemove()
         bot.sendMessage(chat_id, '시작합니다', reply_markup=markup)
         activemenu = home
-        r = activemenu.menu()
-        __keyboard = []
-        for m in r['menu']:
-            __keyboard.append([InlineKeyboardButton(text=m['desc'], callback_data=m['name'])])
-        __keyboard = __keyboard + activemenu.common()
-        keyboard = InlineKeyboardMarkup(inline_keyboard=__keyboard)
-        bot.sendMessage(chat_id, r['desc'], reply_markup=keyboard)
-
+        getInlineButton(chat_id, activemenu.menu())
     else:
         __msg = activemenu.msg(msg)
         if __msg != -1:
             nextmsg = __msg
             if isinstance(nextmsg, Menu):
                 activemenu = nextmsg
-                r=activemenu.menu()
-                __keyboard = []
-                for m in r['menu']:
-                    __keyboard.append([InlineKeyboardButton(text=m['desc'], callback_data=m['name'])])
-                __keyboard = __keyboard + activemenu.common()
-                keyboard = InlineKeyboardMarkup(inline_keyboard=__keyboard)
-                bot.sendMessage(chat_id, r['desc'], reply_markup=keyboard)
+                getInlineButton(chat_id, activemenu.menu())
             else:
                 r = nextmsg
                 if type(r) == dict: 
-                    __keyboard = []
-                    for m in r['menu']:
-                        __keyboard.append([InlineKeyboardButton(text=m['desc'], callback_data=m['name'])])
-                    __keyboard = __keyboard + activemenu.common()
-                    keyboard = InlineKeyboardMarkup(inline_keyboard=__keyboard)
-                    bot.sendMessage(chat_id, r['desc'], reply_markup=keyboard)
+                    getInlineButton(chat_id, r)
                 else:
                     bot.sendMessage(chat_id, r)
-
+                    getInlineButton(chat_id, activemenu.menu())
         else:
             msg = '\n\n뭔가 잘못되었어요 ㅠㅠ'
             bot.sendMessage(chat_id, msg)
+            getInlineButton(chat_id, activemenu.menu())
 
 def on_chat_message(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
@@ -346,22 +321,23 @@ temp0 = DeviceTemp('/temp', '🌡  온습도계', '192.168.0.25')
 aircon1 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.26')
 temp1 = DeviceTemp('/temp', '🌡  온습도계', '192.168.0.26')
 
+
 home.addchild(bedroom) 
 home.addchild(library)
 
-bedroom.parent(home)
+bedroom.setparent(home)
 bedroom.addchild(aircon0)
 bedroom.addchild(temp0)
 
-library.parent(home)
+library.setparent(home)
 library.addchild(aircon1)
 library.addchild(temp1)
 
-aircon0.parent(bedroom)
-aircon1.parent(library)
+aircon0.setparent(bedroom)
+aircon1.setparent(library)
 
-temp0.parent(bedroom)
-temp1.parent(library)
+temp0.setparent(bedroom)
+temp1.setparent(library)
 
 bot = telepot.Bot(MYTOKEN)
 
