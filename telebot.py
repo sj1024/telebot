@@ -84,6 +84,18 @@ class DeviceAircon(Menu):
         self.phase = ''
     def menu(self):
         return {'menu':self.cmd, 'desc':self.getbreadcrumb()}
+    def remoji(self, status):
+        if status == 'RELAY_OFF':
+            __status = '😴😴'
+        elif status == 'RELAY_ON':
+            __status = '⚡⚡'
+        elif status == 'TRIGG_ON':
+            __status = '📈⚡'
+        elif status == 'TRIGG_OFF':
+            __status = '⚡📉'
+        else:
+            __status =  status
+        return __status
     def rcmd(self, key):
         print 'http://' + self.ip + '/' + key
         fcmd = 'http://'
@@ -95,14 +107,14 @@ class DeviceAircon(Menu):
         r = requests.get(fcmd)  # get status
         j = r.json()[u'variables']
         msg = 'ℹ️ '
-        msg += '\n❄️  에어컨 상태: %s' % (j['Status Cool'])
-        msg += '\n🔥 히터 상태: %s' % (j['Status Heat'])
-        msg += '\n🌡 방 온도: %s' % (j['Temp'])
-        msg += '\n💦 방 습도: %s' % (j['Humi'])
-        msg += '\n😕 방 불쾌지수: %s' % (j['DI'])
-        msg += '\n⏰ 타이머 남은 시간(분): %s' % (j['timer_ctrl'])
-        msg += '\n⚙️  설정된 불쾌지수: %s' % (j['di_ctrl'])
-        msg += '\n⚙️  설정된 히터온도: %s' % (j['heat_ctrl'])
+        msg += '\n❄️  에어컨 상태: %s' % self.remoji(j['Status Cool'])
+        msg += '\n🔥 히터 상태: %s' % self.remoji(j['Status Heat'])
+        msg += '\n🌡  방 온도: %s' % self.remoji(j['Temp'])
+        msg += '\n💦 방 습도: %s' % self.remoji(j['Humi'])
+        msg += '\n😕 방 불쾌지수: %s' % self.remoji(j['DI'])
+        msg += '\n⏰ 타이머 남은 시간(분): %s' % self.remoji(j['timer_ctrl'])
+        msg += '\n⚙️  설정된 불쾌지수: %s' % self.remoji(j['di_ctrl'])
+        msg += '\n⚙️  설정된 히터온도: %s' % self.remoji(j['heat_ctrl'])
         '''
         {"Status Heat":"RELAY_OFF","Temp":34.0,"DI":79.34,
         "timer_ctrl":87,"Humi":24.0,"di_ctrl":79,"Status Cool":"RELAY_ON","heat_ctrl":-999}
@@ -259,9 +271,26 @@ class DeviceTemp(DeviceAircon):
     def __init__(self, name, desc, ip):
         DeviceAircon.__init__(self, name, desc, ip)
         self.cmd    = [{'desc':'🌡  온/습도 불쾌지수 보기', 'name':'/status'}]
+    def rcmd(self):
+        print 'http://' + self.ip + '/' + key
+        fcmd = 'http://'
+        fcmd += self.ip
+        fcmd += '/'
+        r = requests.get(fcmd)  # get status
+        j = r.json()[u'variables']
+        msg = 'ℹ️ '
+        msg += '\n🌡  방 온도: %s' % self.remoji(j['Temp'])
+        msg += '\n💦 방 습도: %s' % self.remoji(j['Humi'])
+        msg += '\n😕 방 불쾌지수: %s' % self.remoji(j['DI'])
+        '''
+        {"Status Heat":"RELAY_OFF","Temp":34.0,"DI":79.34,
+        "timer_ctrl":87,"Humi":24.0,"di_ctrl":79,"Status Cool":"RELAY_ON","heat_ctrl":-999}
+        
+        '''
+        return msg
     def msg(self, m):
         if(m == '/status'):
-            return self.rcmd('')
+            return self.rcmd()
         else:
             return -1
 
@@ -300,7 +329,7 @@ def handle(msg, chat_id):
                     bot.sendMessage(chat_id, r)
                     getInlineButton(chat_id, activemenu.menu())
         else:
-            msg = '\n\n뭔가 잘못되었어요 ㅠㅠ'
+            msg = '\n\n뭔가 잘못되었어요 😭😭'
             bot.sendMessage(chat_id, msg)
             getInlineButton(chat_id, activemenu.menu())
 
@@ -315,7 +344,7 @@ def on_callback_query(msg):
 
 home    = Menu('/start', '🏠 시작하기')
 bedroom = Menu('/bedroom', '🛏  침실 작업')
-library = Menu('/library', '💻 서재 작업')
+library = Menu('/library', '📚 서재 작업')
 aircon0 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.25')
 temp0 = DeviceTemp('/temp', '🌡  온습도계', '192.168.0.25')
 aircon1 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.26')
