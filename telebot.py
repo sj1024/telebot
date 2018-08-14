@@ -272,7 +272,6 @@ class DeviceTemp(DeviceAircon):
         DeviceAircon.__init__(self, name, desc, ip)
         self.cmd    = [{'desc':'🌡  온/습도 불쾌지수 보기', 'name':'/status'}]
     def rcmd(self):
-        print 'http://' + self.ip + '/' + key
         fcmd = 'http://'
         fcmd += self.ip
         fcmd += '/'
