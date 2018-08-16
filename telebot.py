@@ -32,7 +32,7 @@ class Menu:
     def setcmd(self, cmd):
         self.cmd.append(cmd)
     def common(self):
-        return [[InlineKeyboardButton(text='🏠 시작', callback_data='/start'), InlineKeyboardButton(text='↩️  뒤로', callback_data='/back')]]
+        return [[InlineKeyboardButton(text='🏠', callback_data='/start'), InlineKeyboardButton(text='↩️ ', callback_data='/back')]]
     def setup(self):
         pass
     def istoday(self, h, d):
@@ -276,7 +276,7 @@ def on_callback_query(msg):
     bot.answerCallbackQuery(query_id, text='Got it')
     handle(query_data, from_id)
 
-home    = Menu('/start', '🏠 시작')
+home    = Menu('/start', '🏠')
 bedroom = Menu('/bedroom', '🛏  침실 작업')
 library = Menu('/library', '📚 서재 작업')
 aircon0 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.25')
