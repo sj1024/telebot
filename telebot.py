@@ -78,7 +78,7 @@ class DeviceAircon(Menu):
     def __init__(self, name, desc, ip):
         Menu.__init__(self, name, desc)
         self.ip     = ip
-        self.cmd    = [{'desc':'에어컨 켜기', 'name':'/on'}, {'desc':'에어컨 끄기', 'name':'/off'}, {'desc':'⚙️  에어컨 상태보기', 'name':'/status'}]
+        self.cmd    = [{'desc':'⚡ 켜기', 'name':'/on'}, {'desc':'💤 끄기', 'name':'/off'}, {'desc':'🔍 보기', 'name':'/status'}]
         self.di     = ''
         self.timer  = ''
         self.phase  = ''
@@ -88,13 +88,13 @@ class DeviceAircon(Menu):
         return {'menu':self.cmd, 'desc':self.getbreadcrumb()}
     def remoji(self, status):
         if status == 'RELAY_OFF':
-            __status = '😴😴'
+            __status = '💤'
         elif status == 'RELAY_ON':
-            __status = '⚡⚡'
+            __status = '⚡'
         elif status == 'TRIGG_ON':
-            __status = '📈⚡'
+            __status = '💤⚡'
         elif status == 'TRIGG_OFF':
-            __status = '⚡📉'
+            __status = '⚡💤'
         else:
             __status =  status
         return __status
@@ -108,7 +108,7 @@ class DeviceAircon(Menu):
             time.sleep(1)
         r = requests.get(fcmd)  # get status
         j = r.json()[u'variables']
-        msg = 'ℹ️  %s' % self.getbreadcrumb()
+        msg = '🔍 %s' % self.getbreadcrumb()
         msg += '\n❄️  에어컨 상태: %s' % self.remoji(j['Status Cool'])
         msg += '\n🔥 히터 상태: %s' % self.remoji(j['Status Heat'])
         msg += '\n🌡  온도: %s ºC' % self.remoji(j['Temp'])
@@ -338,13 +338,13 @@ def on_callback_query(msg):
     bot.answerCallbackQuery(query_id, text='Got it')
     handle(query_data, from_id)
 
-home    = Menu('/start', '🏠 시작하기')
+home    = Menu('/start', '🏠 시작')
 bedroom = Menu('/bedroom', '🛏  침실 작업')
 library = Menu('/library', '📚 서재 작업')
 aircon0 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.25')
-temp0 = DeviceClimate('/temp', '🌡  온습도 보기', '192.168.0.25')
+temp0 = DeviceClimate('/temp', '🌡  온습도', '192.168.0.25')
 aircon1 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.26')
-temp1 = DeviceClimate('/temp', '🌡  온습도 보기', '192.168.0.26')
+temp1 = DeviceClimate('/temp', '🌡  온습도', '192.168.0.26')
 
 
 home.addchild(bedroom) 
