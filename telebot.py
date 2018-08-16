@@ -1,5 +1,5 @@
 #!/usr/bin/python
- # -*- coding: utf8 -*-
+# -*- coding: utf8 -*-
 # vim: set rnu sw=4 ss=4 ts=4 et smartindent fdm=indent :
 import sys
 import time
@@ -35,6 +35,12 @@ class Menu:
         return [[InlineKeyboardButton(text='🏠 시작', callback_data='/start'), InlineKeyboardButton(text='↩️  뒤로', callback_data='/back')]]
     def setup(self):
         pass
+    def istoday(self, date):
+        t = datetime.datetime.now()
+        if date ==  t.strftime('%m-%d'):
+            return '오늘'
+        else:
+            return '내일'
     def handler(self):
         return self
     def msg(self, m):
@@ -153,87 +159,87 @@ class DeviceAircon(Menu):
         menu = []
         m = 30
         d += datetime.timedelta(minutes=30)
-        msg = '삽십분 ~ ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '30 분 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '한시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '1 시간 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '한시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '1 시간 30 분 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '두시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '2시간 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '두시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '2 시간 30 분 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '세시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '3 시간 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '세시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '3 시간 30 분 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '네시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '4 시간 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '네시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '4 시간 30 분 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '다섯시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '5 시간 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '다섯시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '5 시간 30 분 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '여섯시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '6 시간 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '여섯시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '6 시간 30 분 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '일곱시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '7 시간 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '일곱시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '7 시간 30 분 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '여덟시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '8 시간 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '여덟시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '8 시간 30 분 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '아홉시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '9 시간 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '아홉시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '9 시간 30 분 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '열시간 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '10 시간 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         m += 30
         d += datetime.timedelta(minutes=30)
-        msg = '열시간 삼십분 ~ %s' % (d.strftime('%m-%d %H:%M'))
+        msg = '10 시간 30 분 ⏱  %s %s' % (self.istoday(d.strftime('%m-%d')), d.strftime('%H:%M'))
         menu.append({'desc':msg, 'name':'/%03d' % m})
         return {'desc':'⏰ 타이머를 설정합니다', 'menu':menu}
     def msg(self, m):
