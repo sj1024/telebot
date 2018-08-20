@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf8 -*-
 # vim: set rnu sw=4 ss=4 ts=4 et smartindent fdm=indent :
 import sys
@@ -13,9 +13,6 @@ from telepot.loop import MessageLoop
 from telepot.namedtuple import ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 from pprint import pprint
 from myconfig import MYTOKEN
-
-reload(sys)
-sys.setdefaultencoding('utf8')
 
 class Menu:
     def __init__(self, name, desc):
@@ -116,7 +113,6 @@ class DeviceAircon(Menu):
             __status =  status
         return __status
     def rcmd(self, key):
-        print 'http://' + self.ip + '/' + key
         fcmd = 'http://'
         fcmd += self.ip
         fcmd += '/'
