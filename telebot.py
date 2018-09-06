@@ -13,7 +13,7 @@ import logging
 from telepot.loop import MessageLoop
 from telepot.namedtuple import ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 from pprint import pprint
-from myconfig import MYTOKEN
+from myconfig import MYTOKEN, ALLOWED_IDS
 ##
 ##
 logging.basicConfig(filename='telebot.log', level=logging.INFO) 
@@ -306,6 +306,9 @@ def getInlineButton(chat_id, menu):
 ##
 def handle(msg, chat_id):
     global activemenu
+    if chat_id not in ALLOWED_IDS:
+        bot.sendMessage(chat_id, '🔒 허락되지 않은 사용자입니다')
+        return
     if msg == '/back':
         if activemenu != home:
             activemenu = activemenu.getparent()
