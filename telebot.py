@@ -91,7 +91,7 @@ class Menu:
         else:
             return -1
 ##
-class DeviceLight(Menu):
+class DeviceBulb(Menu):
     def __init__(self, name, desc, ip):
         Menu.__init__(self, name, desc)
         self.ip     = ip
@@ -351,7 +351,7 @@ aircon0 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.25')
 temp0 = DeviceClimate('/temp', '🌡  온습도', '192.168.0.25')
 aircon1 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.26')
 temp1 = DeviceClimate('/temp', '🌡  온습도', '192.168.0.26')
-backyard_light = DeviceLight('/light', '💡 줄 조명', '192.168.0.28')
+chain_bulb = DeviceBulb('/bulb', '💡 줄 조명', '192.168.0.28')
 ##
 home.addchild(bedroom) 
 home.addchild(library)
@@ -366,7 +366,7 @@ library.addchild(aircon1)
 library.addchild(temp1)
 ##
 outdoor.setparent(home)
-outdoor.addchild(backyard_light)
+outdoor.addchild(chain_bulb)
 ##
 aircon0.setparent(bedroom)
 aircon1.setparent(library)
@@ -374,7 +374,7 @@ aircon1.setparent(library)
 temp0.setparent(bedroom)
 temp1.setparent(library)
 ##
-backyard_light.setparent(outdoor)
+chain_bulb.setparent(outdoor)
 ##
 bot = telepot.Bot(MYTOKEN)
 ##
