@@ -9,11 +9,14 @@ import requests
 import datetime
 import re
 import time
+import logging
 from telepot.loop import MessageLoop
 from telepot.namedtuple import ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 from pprint import pprint
 from myconfig import MYTOKEN
-
+##
+##
+logging.basicConfig(filename='telebot.log', level=logging.INFO) 
 class Menu:
     def __init__(self, name, desc):
         self.name = name
@@ -87,12 +90,80 @@ class Menu:
             return self.parent
         else:
             return -1
-
+##
+class DeviceLight(Menu):
+    def __init__(self, name, desc, ip):
+        Menu.__init__(self, name, desc)
+        self.ip     = ip
+        self.cmd    = [{'desc':'🔔 켜기', 'name':'/on'}, {'desc':'🔕 끄기', 'name':'/off'}, {'desc':'🔍 보기', 'name':'/status'}]
+        self.timer  = ''
+        self.phase  = ''
+    def setup(self):
+        self.phase = ''
+    def menu(self):
+        return {'menu':self.cmd, 'desc':self.getbreadcrumb()}
+    def remoji(self, status):
+        if status == 0:
+            __status = '🔕'
+        elif status == 1:
+            __status = '🔔'
+        else:
+            __status =  status
+        return __status
+    def rcmd(self, key):
+        fcmd = 'http://'
+        fcmd += self.ip
+        fcmd += '/'
+        if key != '':
+            requests.get(fcmd+key)  # url is cmd Rest API
+            time.sleep(1)
+        r = requests.get(fcmd)  # get status
+        j = r.json()[u'variables']
+        msg = '🔍 %s' % self.getbreadcrumb()
+        msg += '\n⚙️  동작 상태: %s' % self.remoji(j['r0_ctrl'])
+        msg += '\n⏰ 타이머 남은 시간: %s 분' % self.remoji(j['r0_timer'])
+        return msg
+    def menu_timer(self):
+        menu = []
+        msg = ''
+        d = datetime.datetime.now()
+        for x in range(30, 900, 30):
+            d += datetime.timedelta(minutes=30)
+            msg = '⏱  %d시간 %d분(%s %s)' % (x/60, x%60, self.istoday(d.strftime('%H'), d.strftime('%m-%d')), d.strftime('%H:%M'))
+            menu.append({'desc':msg, 'name':'/%03d' % (x)})
+        return {'desc':'⏰ 타이머를 설정합니다', 'menu':menu}
+    def msg(self, m):
+        if self.phase == 'WAITINGTIMER':
+            self.timer = m[1:]
+            r = re.match('\d{3}', self.timer)
+            if r:
+                self.phase = '' 
+                key = 'relayctrl?params='
+                key += '0' 
+                key += self.timer
+                return self.rcmd(key)
+            else: return -1
+        elif(m == '/on'):
+            self.phase = 'WAITINGTIMER'
+            return self.menu_timer()
+        elif(m == '/off'):
+            self.phase = ''
+            key = 'relayctrl?params='
+            key += '0000'
+            return self.rcmd(key)
+        elif(m == '/status'):
+            self.phase = ''
+            key = ''
+            return self.rcmd(key)
+        else:
+            self.phase = ''
+            return -1
+##
 class DeviceAircon(Menu):
     def __init__(self, name, desc, ip):
         Menu.__init__(self, name, desc)
         self.ip     = ip
-        self.cmd    = [{'desc':'⚡ 켜기', 'name':'/on'}, {'desc':'💤 끄기', 'name':'/off'}, {'desc':'🔍 보기', 'name':'/status'}]
+        self.cmd    = [{'desc':'🔔 켜기', 'name':'/on'}, {'desc':'🔕 끄기', 'name':'/off'}, {'desc':'🔍 보기', 'name':'/status'}]
         self.di     = ''
         self.timer  = ''
         self.phase  = ''
@@ -102,13 +173,13 @@ class DeviceAircon(Menu):
         return {'menu':self.cmd, 'desc':self.getbreadcrumb()}
     def remoji(self, status):
         if status == 'RELAY_OFF':
-            __status = '💤'
+            __status = '🔕'
         elif status == 'RELAY_ON':
-            __status = '⚡'
+            __status = '🔔'
         elif status == 'TRIGG_ON':
-            __status = '💤⚡'
+            __status = '🔕🔔'
         elif status == 'TRIGG_OFF':
-            __status = '⚡💤'
+            __status = '🔔🔕'
         else:
             __status =  status
         return __status
@@ -202,7 +273,7 @@ class DeviceAircon(Menu):
         else:
             self.phase = ''
             return -1
-
+##
 class DeviceClimate(DeviceAircon):
     def __init__(self, name, desc, ip):
         DeviceAircon.__init__(self, name, desc, ip)
@@ -223,7 +294,7 @@ class DeviceClimate(DeviceAircon):
         
         '''
         return msg
-
+##
 def getInlineButton(chat_id, menu):
     __keyboard = []
     for m in menu['menu']:
@@ -232,7 +303,7 @@ def getInlineButton(chat_id, menu):
     keyboard = InlineKeyboardMarkup(inline_keyboard=__keyboard)
     bot.sendMessage(chat_id, menu['desc'], reply_markup=keyboard)
     return 
-
+##
 def handle(msg, chat_id):
     global activemenu
     if msg == '/back':
@@ -262,50 +333,57 @@ def handle(msg, chat_id):
             msg = '\n\n뭔가 잘못되었어요 😭😭'
             bot.sendMessage(chat_id, msg)
             getInlineButton(chat_id, activemenu.menu())
-
+##
 def on_chat_message(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
     handle(msg['text'], chat_id)
-
+##
 def on_callback_query(msg):
     query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
     bot.answerCallbackQuery(query_id, text='Got it')
     handle(query_data, from_id)
-
+##
 home    = Menu('/start', '🏠')
 bedroom = Menu('/bedroom', '🛏  침실 작업')
 library = Menu('/library', '📚 서재 작업')
+outdoor = Menu('/outdoor', '⛲️ 야외 작업')
 aircon0 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.25')
 temp0 = DeviceClimate('/temp', '🌡  온습도', '192.168.0.25')
 aircon1 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.26')
 temp1 = DeviceClimate('/temp', '🌡  온습도', '192.168.0.26')
-
-
+backyard_light = DeviceLight('/light', '💡 줄 조명', '192.168.0.28')
+##
 home.addchild(bedroom) 
 home.addchild(library)
-
+home.addchild(outdoor)
+##
 bedroom.setparent(home)
 bedroom.addchild(aircon0)
 bedroom.addchild(temp0)
-
+##
 library.setparent(home)
 library.addchild(aircon1)
 library.addchild(temp1)
-
+##
+outdoor.setparent(home)
+outdoor.addchild(backyard_light)
+##
 aircon0.setparent(bedroom)
 aircon1.setparent(library)
-
+##
 temp0.setparent(bedroom)
 temp1.setparent(library)
-
+##
+backyard_light.setparent(outdoor)
+##
 bot = telepot.Bot(MYTOKEN)
-
+##
 activemenu = home
-
+##
 MessageLoop(bot, {'chat': on_chat_message,
                   'callback_query': on_callback_query}).run_as_thread()
-print('Listening ...')
-
+logging.info('Listening ...')
+##
 while 1:
     time.sleep(10)
 
