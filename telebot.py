@@ -13,7 +13,7 @@ import logging
 from telepot.loop import MessageLoop
 from telepot.namedtuple import ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 from pprint import pprint
-from myconfig import MYTOKEN, ALLOWED_IDS
+from myconfig import *
 ##
 ##
 logging.basicConfig(filename='telebot.log', level=logging.INFO) 
@@ -344,7 +344,7 @@ def on_chat_message(msg):
 def on_callback_query(msg):
     query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
     bot.answerCallbackQuery(query_id, text='Got it')
-    handle(query_data, from_id)
+    handle(query_data, ROOM_ID)
 ##
 home    = Menu('/start', '🏠')
 bedroom = Menu('/bedroom', '🛏  침실 작업')
