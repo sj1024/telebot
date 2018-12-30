@@ -91,6 +91,46 @@ class Menu:
         else:
             return -1
 ##
+class DeviceAntifreeze(Menu):
+    def __init__(self, name, desc, ip):
+        Menu.__init__(self, name, desc)
+        self.ip     = ip
+        self.cmd    = [{'desc':'🔍 보기', 'name':'/status'}]
+        self.timer  = ''
+        self.phase  = ''
+    def setup(self):
+        self.phase = ''
+    def menu(self):
+        return {'menu':self.cmd, 'desc':self.getbreadcrumb()}
+    def remoji(self, status):
+        if status == 0:
+            __status = '🔕'
+        elif status == 1:
+            __status = '🔔'
+        else:
+            __status =  status
+        return __status
+    def rcmd(self, key):
+        fcmd = 'http://'
+        fcmd += self.ip
+        fcmd += '/'
+        if key != '':
+            requests.get(fcmd+key)  # url is cmd Rest API
+            time.sleep(1)
+        r = requests.get(fcmd)  # get status
+        j = r.json()[u'variables']
+        msg = '🔍 %s' % self.getbreadcrumb()
+        msg += '\n보일러실⚙️ 온도: %s' % self.remoji(j['Temp'])
+        return msg
+    def msg(self, m):
+        if(m == '/status'):
+            self.phase = ''
+            key = ''
+            return self.rcmd(key)
+        else:
+            self.phase = ''
+            return -1
+##
 class DeviceBulb(Menu):
     def __init__(self, name, desc, ip):
         Menu.__init__(self, name, desc)
@@ -355,6 +395,7 @@ temp0 = DeviceClimate('/temp', '🌡  온습도', '192.168.0.25')
 aircon1 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.26')
 temp1 = DeviceClimate('/temp', '🌡  온습도', '192.168.0.26')
 chain_bulb = DeviceBulb('/bulb', '💡 줄 조명', '192.168.0.28')
+antifreeze = DeviceAntifreeze('/antifreeze', '🥶  보일러실 발열와이어', '192.168.0.27')
 ##
 home.addchild(bedroom) 
 home.addchild(library)
@@ -370,6 +411,7 @@ library.addchild(temp1)
 ##
 outdoor.setparent(home)
 outdoor.addchild(chain_bulb)
+outdoor.addchild(antifreeze)
 ##
 aircon0.setparent(bedroom)
 aircon1.setparent(library)
@@ -378,6 +420,7 @@ temp0.setparent(bedroom)
 temp1.setparent(library)
 ##
 chain_bulb.setparent(outdoor)
+antifreeze.setparent(outdoor)
 ##
 bot = telepot.Bot(MYTOKEN)
 ##
