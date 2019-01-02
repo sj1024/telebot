@@ -95,7 +95,7 @@ class DeviceAntifreeze(Menu):
     def __init__(self, name, desc, ip):
         Menu.__init__(self, name, desc)
         self.ip     = ip
-        self.cmd    = [{'desc':'🔍 보기', 'name':'/status'}]
+        self.cmd    = [{'desc':'🔔 켜기', 'name':'/on'}, {'desc':'🔕 끄기', 'name':'/off'}, {'desc':'🔍 보기', 'name':'/status'}]
         self.timer  = ''
         self.phase  = ''
     def setup(self):
@@ -120,10 +120,40 @@ class DeviceAntifreeze(Menu):
         r = requests.get(fcmd)  # get status
         j = r.json()[u'variables']
         msg = '🔍 %s' % self.getbreadcrumb()
-        msg += '\n보일러실⚙️ 온도: %s' % self.remoji(j['Temp'])
+        msg += '\n⚙️  동작 상태: %s' % self.remoji(j['Ctrl'])
+        msg += '\n⏰ 타이머 남은 시간: %s 분' % self.remoji(j['Timer'])
+        msg += '\n온도: %s ºC'  % self.remoji(j['Temp'])
+        msg += '\n습도: %s'  % self.remoji(j['Humi'])
         return msg
+    def menu_timer(self):
+        menu = []
+        msg = ''
+        d = datetime.datetime.now()
+        for x in range(5, 30, 5):
+            d += datetime.timedelta(minutes=5)
+            msg = '⏱  %d시간 %d분(%s %s)' % (x/60, x%60, self.istoday(d.strftime('%H'), d.strftime('%m-%d')), d.strftime('%H:%M'))
+            menu.append({'desc':msg, 'name':'/%03d' % (x)})
+        return {'desc':'⏰ 타이머를 설정합니다', 'menu':menu}
     def msg(self, m):
-        if(m == '/status'):
+        if self.phase == 'WAITINGTIMER':
+            self.timer = m[1:]
+            r = re.match('\d{3}', self.timer)
+            if r:
+                self.phase = '' 
+                key = 'relayctrl?params='
+                key += '0' 
+                key += self.timer
+                return self.rcmd(key)
+            else: return -1
+        elif(m == '/on'):
+            self.phase = 'WAITINGTIMER'
+            return self.menu_timer()
+        elif(m == '/off'):
+            self.phase = ''
+            key = 'relayctrl?params='
+            key += '0000'
+            return self.rcmd(key)
+        elif(m == '/status'):
             self.phase = ''
             key = ''
             return self.rcmd(key)
