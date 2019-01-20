@@ -379,11 +379,11 @@ def handle(msg, chat_id):
     if chat_id not in ALLOWED_IDS:
         bot.sendMessage(chat_id, '🔒 허락되지 않은 사용자입니다')
         return
-    if msg == '/back':
+    elif re.match(r'/back', msg):
         if activemenu != home:
             activemenu = activemenu.getparent()
         getInlineButton(chat_id, activemenu.menu())
-    elif msg == '/start':
+    elif re.match(r'/start', msg):
         markup = ReplyKeyboardRemove()
         bot.sendMessage(chat_id, '시작합니다', reply_markup=markup)
         activemenu = home
