@@ -16,7 +16,7 @@ from pprint import pprint
 from myconfig import *
 ##
 ##
-logging.basicConfig(filename='telebot.log', level=logging.INFO) 
+logging.basicConfig(filename='telebot.log', level=logging.INFO)
 class Menu:
     def __init__(self, name, desc):
         self.name = name
@@ -32,25 +32,25 @@ class Menu:
     def setcmd(self, cmd):
         self.cmd.append(cmd)
     def common(self):
-        return [[InlineKeyboardButton(text='🏠', callback_data='/start'), InlineKeyboardButton(text='↩️ ', callback_data='/back')]]
+        return [[InlineKeyboardButton(text='Home', callback_data='/start'), InlineKeyboardButton(text='Back', callback_data='/back')]]
     def setup(self):
         pass
     def istoday(self, h, d):
         mood=''
         if h>='00' and h<'06':
-            mood='새벽'
+            mood='AM'
         elif h>='06' and h<'12':
-            mood='오전'
+            mood='AM'
         elif h>='12' and h<'18':
-            mood='오후'
+            mood='PM'
         elif h>='18' and h<'24':
-            mood='저녁'
-        
+            mood='PM'
+
         t = datetime.datetime.now()
         if d ==  t.strftime('%m-%d'):
-            mood = '오늘 ' + mood
+            mood = 'Today ' + mood
         else:
-            mood = '내일 ' + mood
+            mood = 'Tomorrow ' + mood
         return mood
     def handler(self):
         return self
@@ -62,7 +62,7 @@ class Menu:
                     c.setup()
                     return c.handler()
         return -1
-    def getbreadcrumb(self, buf=None): 
+    def getbreadcrumb(self, buf=None):
         if buf ==None:
             buf=[]
         buf.insert(0, self.desc)
@@ -71,10 +71,10 @@ class Menu:
         else:
             r=''
             for b in buf:
-                r += b + ' » '
+                r += b + ' > '
             return r[:-3]
-    def menu(self): 
-        menu = [] 
+    def menu(self):
+        menu = []
         if self.child:
             for m in self.child:
                 menu.append({'name': m.name, 'desc': m.desc})
@@ -95,7 +95,7 @@ class DeviceAntifreeze(Menu):
     def __init__(self, name, desc, ip):
         Menu.__init__(self, name, desc)
         self.ip     = ip
-        self.cmd    = [{'desc':'🔔 켜기', 'name':'/on'}, {'desc':'🔕 끄기', 'name':'/off'}, {'desc':'🔍 보기', 'name':'/status'}]
+        self.cmd    = [{'desc':'Status', 'name':'/status'}]
         self.timer  = ''
         self.phase  = ''
     def setup(self):
@@ -104,56 +104,27 @@ class DeviceAntifreeze(Menu):
         return {'menu':self.cmd, 'desc':self.getbreadcrumb()}
     def remoji(self, status):
         if status == 0:
-            __status = '🔕'
+            __status = 'Off'
         elif status == 1:
-            __status = '🔔'
+            __status = 'On'
         else:
             __status =  status
         return __status
     def rcmd(self, key):
         fcmd = 'http://'
         fcmd += self.ip
-        fcmd += '/'
         if key != '':
-            requests.get(fcmd+key)  # url is cmd Rest API
+            requests.post(fcmd, json={"ctrl":key})  # url is cmd Rest API
             time.sleep(1)
         r = requests.get(fcmd)  # get status
-        j = r.json()[u'variables']
-        msg = '🔍 %s' % self.getbreadcrumb()
-        msg += '\n⚙️  동작 상태: %s' % self.remoji(j['Ctrl'])
-        msg += '\n⏰ 타이머 남은 시간: %s 분' % self.remoji(j['Timer'])
-        msg += '\n온도: %s ºC'  % self.remoji(j['Temp'])
-        msg += '\n습도: %s'  % self.remoji(j['Humi'])
+        j = r.json()[u'variables'][0]
+        msg = '[%s]' % self.getbreadcrumb()
+        msg += '\nHostname:  %s' % (j['Hostname'].encode('utf-8'))
+        msg += '\nCtrl: %s' % self.remoji(j['Ctrl'])
+        msg += '\nTemp: %s C'  % self.remoji(j['Temp'])
         return msg
-    def menu_timer(self):
-        menu = []
-        msg = ''
-        d = datetime.datetime.now()
-        for x in range(5, 30, 5):
-            d += datetime.timedelta(minutes=5)
-            msg = '⏱  %d시간 %d분(%s %s)' % (x/60, x%60, self.istoday(d.strftime('%H'), d.strftime('%m-%d')), d.strftime('%H:%M'))
-            menu.append({'desc':msg, 'name':'/%03d' % (x)})
-        return {'desc':'⏰ 타이머를 설정합니다', 'menu':menu}
     def msg(self, m):
-        if self.phase == 'WAITINGTIMER':
-            self.timer = m[1:]
-            r = re.match('\d{3}', self.timer)
-            if r:
-                self.phase = '' 
-                key = 'relayctrl?params='
-                key += '0' 
-                key += self.timer
-                return self.rcmd(key)
-            else: return -1
-        elif(m == '/on'):
-            self.phase = 'WAITINGTIMER'
-            return self.menu_timer()
-        elif(m == '/off'):
-            self.phase = ''
-            key = 'relayctrl?params='
-            key += '0000'
-            return self.rcmd(key)
-        elif(m == '/status'):
+        if(m == '/status'):
             self.phase = ''
             key = ''
             return self.rcmd(key)
@@ -165,7 +136,7 @@ class DeviceBulb(Menu):
     def __init__(self, name, desc, ip):
         Menu.__init__(self, name, desc)
         self.ip     = ip
-        self.cmd    = [{'desc':'🔔 켜기', 'name':'/on'}, {'desc':'🔕 끄기', 'name':'/off'}, {'desc':'🔍 보기', 'name':'/status'}]
+        self.cmd    = [{'desc':'On', 'name':'/on'}, {'desc':'Off', 'name':'/off'}, {'desc':'Status', 'name':'/status'}]
         self.timer  = ''
         self.phase  = ''
     def setup(self):
@@ -174,24 +145,23 @@ class DeviceBulb(Menu):
         return {'menu':self.cmd, 'desc':self.getbreadcrumb()}
     def remoji(self, status):
         if status == 0:
-            __status = '🔕'
+            __status = 'Off'
         elif status == 1:
-            __status = '🔔'
+            __status = 'On'
         else:
             __status =  status
         return __status
     def rcmd(self, key):
         fcmd = 'http://'
         fcmd += self.ip
-        fcmd += '/'
         if key != '':
-            requests.get(fcmd+key)  # url is cmd Rest API
-            time.sleep(1)
-        r = requests.get(fcmd)  # get status
-        j = r.json()[u'variables']
-        msg = '🔍 %s' % self.getbreadcrumb()
-        msg += '\n⚙️  동작 상태: %s' % self.remoji(j['r0_ctrl'])
-        msg += '\n⏰ 타이머 남은 시간: %s 분' % self.remoji(j['r0_timer'])
+            r = requests.post(fcmd, json={"ctrl":key})  # url is cmd Rest API
+        else:
+            r = requests.get(fcmd)  # get status
+        j = r.json()[u'variables'][0]
+        msg = '[%s]' % self.getbreadcrumb()
+        msg += '\nHostname:  %s' % (j['Hostname'].encode('utf-8'))
+        msg += '\nTime left: %s Hrs' % (j['Timer']/60.0/60)
         return msg
     def menu_timer(self):
         menu = []
@@ -199,18 +169,16 @@ class DeviceBulb(Menu):
         d = datetime.datetime.now()
         for x in range(30, 900, 30):
             d += datetime.timedelta(minutes=30)
-            msg = '⏱  %d시간 %d분(%s %s)' % (x/60, x%60, self.istoday(d.strftime('%H'), d.strftime('%m-%d')), d.strftime('%H:%M'))
+            msg = 'Timer %d : %d (%s %s)' % (x/60, x%60, self.istoday(d.strftime('%H'), d.strftime('%m-%d')), d.strftime('%H:%M'))
             menu.append({'desc':msg, 'name':'/%03d' % (x)})
-        return {'desc':'⏰ 타이머를 설정합니다', 'menu':menu}
+        return {'desc':'Setting timer...', 'menu':menu}
     def msg(self, m):
         if self.phase == 'WAITINGTIMER':
             self.timer = m[1:]
             r = re.match('\d{3}', self.timer)
             if r:
-                self.phase = '' 
-                key = 'relayctrl?params='
-                key += '0' 
-                key += self.timer
+                self.phase = ''
+                key = '1' + self.timer
                 return self.rcmd(key)
             else: return -1
         elif(m == '/on'):
@@ -218,8 +186,7 @@ class DeviceBulb(Menu):
             return self.menu_timer()
         elif(m == '/off'):
             self.phase = ''
-            key = 'relayctrl?params='
-            key += '0000'
+            key = '0000'
             return self.rcmd(key)
         elif(m == '/status'):
             self.phase = ''
@@ -233,7 +200,7 @@ class DeviceAircon(Menu):
     def __init__(self, name, desc, ip):
         Menu.__init__(self, name, desc)
         self.ip     = ip
-        self.cmd    = [{'desc':'🔔 켜기', 'name':'/on'}, {'desc':'🔕 끄기', 'name':'/off'}, {'desc':'🔍 보기', 'name':'/status'}]
+        self.cmd    = [{'desc':'On', 'name':'/on'}, {'desc':'Off', 'name':'/off'}, {'desc':'Status', 'name':'/status'}]
         self.di     = ''
         self.timer  = ''
         self.phase  = ''
@@ -241,76 +208,55 @@ class DeviceAircon(Menu):
         self.phase = ''
     def menu(self):
         return {'menu':self.cmd, 'desc':self.getbreadcrumb()}
-    def remoji(self, status):
-        if status == 'RELAY_OFF':
-            __status = '🔕'
-        elif status == 'RELAY_ON':
-            __status = '🔔'
-        elif status == 'TRIGG_ON':
-            __status = '🔕🔔'
-        elif status == 'TRIGG_OFF':
-            __status = '🔔🔕'
-        else:
-            __status =  status
-        return __status
     def rcmd(self, key):
         fcmd = 'http://'
         fcmd += self.ip
-        fcmd += '/'
         if key != '':
-            requests.get(fcmd+key)  # url is cmd Rest API
-            time.sleep(1)
+            requests.post(fcmd, json={"ctrl":key})  # url is cmd Rest API
         r = requests.get(fcmd)  # get status
-        j = r.json()[u'variables']
-        msg = '🔍 %s' % self.getbreadcrumb()
-        msg += '\n❄️  에어컨 상태: %s' % self.remoji(j['Status Cool'])
-        msg += '\n🔥 히터 상태: %s' % self.remoji(j['Status Heat'])
-        msg += '\n🌡  온도: %s ºC' % self.remoji(j['Temp'])
-        msg += '\n💦 습도: %s %%' % self.remoji(j['Humi'])
-        msg += '\n😕 불쾌지수: %s' % self.remoji(j['DI'])
-        msg += '\n⏰ 타이머 남은 시간: %s 분' % self.remoji(j['timer_ctrl'])
-        msg += '\n⚙️  설정된 불쾌지수: %s' % self.remoji(j['di_ctrl'])
-        msg += '\n⚙️  설정된 히터온도: %s ºC' % self.remoji(j['heat_ctrl'])
-        '''
-        {"Status Heat":"RELAY_OFF","Temp":34.0,"DI":79.34,
-        "timer_ctrl":87,"Humi":24.0,"di_ctrl":79,"Status Cool":"RELAY_ON","heat_ctrl":-999}
-        
-        '''
+        j = r.json()[u'variables'][0]
+        msg = '%s' % self.getbreadcrumb()
+        msg += '\nHostname:  %s' % j['Hostname'].encode('utf-8')
+        msg += '\nTemp:  %2.2f c' % j['Temp']
+        msg += '\nHumi: %2.2f %%'  % j['Humi']
+        msg += '\nDI: %2.2f'  % j['DI']
+        msg += '\nDICtrl: %d'  % j['DICtrl']
+        msg += '\nTime left: %2.2f Hrs' % (j['Timer']/60.0/60)
         return msg
-    def menu_di(self):
+    def menu_di(self)   :
         menu=[]
-        menu.append({'desc':'68, 😄 불쾌감을 느끼는 사람 없음', 'name':'/068'})
-        menu.append({'desc':'69',  'name':'/069'})
+        menu.append({'desc':'68', 'name':'/068'})
+        menu.append({'desc':'69', 'name':'/069'})
         menu.append({'desc':'70', 'name':'/070'})
         menu.append({'desc':'71', 'name':'/071'})
-        menu.append({'desc':'72, 😕', 'name':'/072'})
+        menu.append({'desc':'72', 'name':'/072'})
         menu.append({'desc':'73', 'name':'/073'})
         menu.append({'desc':'74', 'name':'/074'})
-        menu.append({'desc':'75, ☹️  약 50% 인간이 불쾌감을 느끼기 시작함', 'name':'/075'})
+        menu.append({'desc':'75', 'name':'/075'})
         menu.append({'desc':'76', 'name':'/076'})
         menu.append({'desc':'77', 'name':'/077'})
         menu.append({'desc':'78', 'name':'/078'})
         menu.append({'desc':'79', 'name':'/079'})
-        menu.append({'desc':'80, 😣 모든 인간이 불쾌감을 느끼기 시작함' , 'name':'/080'})
+        menu.append({'desc':'80', 'name':'/080'})
         menu.append({'desc':'81', 'name':'/081'})
         menu.append({'desc':'82', 'name':'/082'})
         menu.append({'desc':'83', 'name':'/083'})
         menu.append({'desc':'84', 'name':'/084'})
-        menu.append({'desc':'85, 😩', 'name':'/085'})
+        menu.append({'desc':'85', 'name':'/085'})
         menu.append({'desc':'86', 'name':'/086'})
         menu.append({'desc':'87', 'name':'/087'})
         menu.append({'desc':'88', 'name':'/088'})
-        menu.append({'desc':'89, 😫', 'name':'/089'})
-        return {'desc':'불쾌지수를 설정합니다', 'menu':menu}
+        menu.append({'desc':'89', 'name':'/089'})
+        return {'desc':'Setting DI...', 'menu':menu}
     def menu_timer(self):
         menu = []
         msg = ''
         d = datetime.datetime.now()
         for x in range(30, 900, 30):
             d += datetime.timedelta(minutes=30)
-            msg = '⏱  %d시간 %d분(%s %s)' % (x/60, x%60, self.istoday(d.strftime('%H'), d.strftime('%m-%d')), d.strftime('%H:%M'))
+            msg = 'Timer %d:%d (%s %s)' % (x/60, x%60, self.istoday(d.strftime('%H'), d.strftime('%m-%d')), d.strftime('%H:%M'))
             menu.append({'desc':msg, 'name':'/%03d' % (x)})
-        return {'desc':'⏰ 타이머를 설정합니다', 'menu':menu}
+        return {'desc':'Setting Timer...', 'menu':menu}
     def msg(self, m):
         if self.phase == 'WAITINGTIMER':
             self.timer = m[1:]
@@ -322,10 +268,9 @@ class DeviceAircon(Menu):
         elif self.phase == 'WAITINGDI':
             self.di= m[1:]
             r = re.match('\d{3}', self.di)
-            if r: 
-                self.phase = '' 
-                key = 'cool_on?params='
-                key += '1' + self.timer + self.di
+            if r:
+                self.phase = ''
+                key = '1' + self.timer + self.di
                 return self.rcmd(key)
             else: return -1
         elif(m == '/on'):
@@ -333,8 +278,7 @@ class DeviceAircon(Menu):
             return self.menu_timer()
         elif(m == '/off'):
             self.phase = ''
-            key = 'cool_on?params='
-            key += '0'
+            key = '0'
             return self.rcmd(key)
         elif(m == '/status'):
             self.phase = ''
@@ -347,22 +291,18 @@ class DeviceAircon(Menu):
 class DeviceClimate(DeviceAircon):
     def __init__(self, name, desc, ip):
         DeviceAircon.__init__(self, name, desc, ip)
-        self.cmd    = [{'desc':'🌡  온/습도 불쾌지수 보기', 'name':'/status'}]
+        self.cmd    = [{'desc':'Status', 'name':'/status'}]
     def handler(self):
         fcmd = 'http://'
         fcmd += self.ip
         fcmd += '/'
         r = requests.get(fcmd)  # get status
-        j = r.json()[u'variables']
-        msg = 'ℹ️  %s' % self.getbreadcrumb()
-        msg += '\n🌡  온도: %s ºC' % self.remoji(j['Temp'])
-        msg += '\n💦 습도: %s %%' % self.remoji(j['Humi'])
-        msg += '\n😕 불쾌지수: %s' % self.remoji(j['DI'])
-        '''
-        {"Status Heat":"RELAY_OFF","Temp":34.0,"DI":79.34,
-        "timer_ctrl":87,"Humi":24.0,"di_ctrl":79,"Status Cool":"RELAY_ON","heat_ctrl":-999}
-        
-        '''
+        j = r.json()[u'variables'][0]
+        msg = '%s' % self.getbreadcrumb()
+        msg += '\nHostname:  %s' % j['Temp'].encode('utf-8')
+        msg += '\nTemp:  %2.2f c' % j['Temp']
+        msg += '\nHumi: %2.2f %%'  % j['Humi']
+        msg += '\nDI: %2.2f'  % j['DI']
         return msg
 ##
 def getInlineButton(chat_id, menu):
@@ -372,12 +312,12 @@ def getInlineButton(chat_id, menu):
     __keyboard = __keyboard + activemenu.common()
     keyboard = InlineKeyboardMarkup(inline_keyboard=__keyboard)
     bot.sendMessage(chat_id, menu['desc'], reply_markup=keyboard)
-    return 
+    return
 ##
 def handle(msg, chat_id):
     global activemenu
     if chat_id not in ALLOWED_IDS:
-        bot.sendMessage(chat_id, '🔒 허락되지 않은 사용자입니다')
+        bot.sendMessage(chat_id, 'You are not allowed')
         return
     elif re.match(r'/back', msg):
         if activemenu != home:
@@ -385,7 +325,7 @@ def handle(msg, chat_id):
         getInlineButton(chat_id, activemenu.menu())
     elif re.match(r'/start', msg):
         markup = ReplyKeyboardRemove()
-        bot.sendMessage(chat_id, '시작합니다', reply_markup=markup)
+        bot.sendMessage(chat_id, 'Starting...', reply_markup=markup)
         activemenu = home
         getInlineButton(chat_id, activemenu.menu())
     else:
@@ -397,13 +337,13 @@ def handle(msg, chat_id):
                 getInlineButton(chat_id, activemenu.menu())
             else:
                 r = nextmsg
-                if type(r) == dict: 
+                if type(r) == dict:
                     getInlineButton(chat_id, r)
                 else:
                     bot.sendMessage(chat_id, r)
                     getInlineButton(chat_id, activemenu.menu())
         else:
-            msg = '\n\n뭔가 잘못되었어요 😭😭'
+            msg = '\n\nSomething went wrong!'
             bot.sendMessage(chat_id, msg)
             getInlineButton(chat_id, activemenu.menu())
 ##
@@ -416,35 +356,35 @@ def on_callback_query(msg):
     bot.answerCallbackQuery(query_id, text='Got it')
     handle(query_data, ROOM_ID)
 ##
-home    = Menu('/start', '🏠')
-bedroom = Menu('/bedroom', '🛏  침실 작업')
-library = Menu('/library', '📚 서재 작업')
-outdoor = Menu('/outdoor', '⛲️ 야외 작업')
-aircon0 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.25')
-temp0 = DeviceClimate('/temp', '🌡  온습도', '192.168.0.25')
-aircon1 = DeviceAircon('/aircon', '❄️  에어컨', '192.168.0.26')
-temp1 = DeviceClimate('/temp', '🌡  온습도', '192.168.0.26')
-chain_bulb = DeviceBulb('/bulb', '💡 줄 조명', '192.168.0.28')
-antifreeze = DeviceAntifreeze('/antifreeze', '🥶  보일러실 발열와이어', '192.168.0.27')
+home    = Menu('/start', 'Home')
+bedroom = Menu('/bedroom', 'Bedroom')
+library = Menu('/library', 'Library')
+outdoor = Menu('/outdoor', 'Outdoor')
+ac_bedroom = DeviceAircon('/aircon', 'A/C', '192.168.0.25')
+temp0 = DeviceClimate('/temp', 'Temp', '192.168.0.25')
+ac_library = DeviceAircon('/aircon', 'A/C', '192.168.0.26')
+temp1 = DeviceClimate('/temp', 'Temp', '192.168.0.26')
+chain_bulb = DeviceBulb('/bulb', 'Light', '192.168.0.28')
+antifreeze = DeviceAntifreeze('/antifreeze', 'Heat wire', '192.168.0.27')
 ##
-home.addchild(bedroom) 
+home.addchild(bedroom)
 home.addchild(library)
 home.addchild(outdoor)
 ##
 bedroom.setparent(home)
-bedroom.addchild(aircon0)
+bedroom.addchild(ac_bedroom)
 bedroom.addchild(temp0)
 ##
 library.setparent(home)
-library.addchild(aircon1)
+library.addchild(ac_library)
 library.addchild(temp1)
 ##
 outdoor.setparent(home)
 outdoor.addchild(chain_bulb)
 outdoor.addchild(antifreeze)
 ##
-aircon0.setparent(bedroom)
-aircon1.setparent(library)
+ac_bedroom.setparent(bedroom)
+ac_library.setparent(library)
 ##
 temp0.setparent(bedroom)
 temp1.setparent(library)
