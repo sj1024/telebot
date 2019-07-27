@@ -119,7 +119,7 @@ class DeviceAntifreeze(Menu):
             r = requests.get(fcmd)  # get status
         j = r.json()[u'variables'][0]
         msg = '[%s]' % self.getbreadcrumb()
-        msg += '\nHostname:  %s' % (j['Hostname'].encode('utf-8'))
+        msg += '\nHostname:  %s' % j['Hostname']
         msg += '\nCtrl: %s' % self.remoji(j['Ctrl'])
         msg += '\nTemp: %s C'  % self.remoji(j['Temp'])
         return msg
@@ -160,7 +160,7 @@ class DeviceBulb(Menu):
             r = requests.get(fcmd)  # get status
         j = r.json()[u'variables'][0]
         msg = '[%s]' % self.getbreadcrumb()
-        msg += '\nHostname:  %s' % (j['Hostname'].encode('utf-8'))
+        msg += '\nHostname:  %s' % j['Hostname']
         msg += '\nTime left: %s Hrs' % (j['Timer']/60.0/60)
         return msg
     def menu_timer(self):
@@ -217,7 +217,7 @@ class DeviceAircon(Menu):
             r = requests.get(fcmd)  # get status
         j = r.json()[u'variables'][0]
         msg = '%s' % self.getbreadcrumb()
-        msg += '\nHostname:  %s' % j['Hostname'].encode('utf-8')
+        msg += '\nHostname:  %s' % j['Hostname']
         msg += '\nTemp:  %2.2f c' % j['Temp']
         msg += '\nHumi: %2.2f %%'  % j['Humi']
         msg += '\nDI: %2.2f'  % j['DI']
@@ -285,7 +285,7 @@ class DeviceClimate(DeviceAircon):
         r = requests.get(fcmd)  # get status
         j = r.json()[u'variables'][0]
         msg = '%s' % self.getbreadcrumb()
-        msg += '\nHostname:  %s' % j['Temp'].encode('utf-8')
+        msg += '\nHostname:  %s' % j['Hostname']
         msg += '\nTemp:  %2.2f c' % j['Temp']
         msg += '\nHumi: %2.2f %%'  % j['Humi']
         msg += '\nDI: %2.2f'  % j['DI']
