@@ -114,9 +114,9 @@ class DeviceAntifreeze(Menu):
         fcmd = 'http://'
         fcmd += self.ip
         if key != '':
-            requests.post(fcmd, json={"ctrl":key})  # url is cmd Rest API
-            time.sleep(1)
-        r = requests.get(fcmd)  # get status
+            r = requests.post(fcmd, json={"ctrl":key})  # url is cmd Rest API
+        else:
+            r = requests.get(fcmd)  # get status
         j = r.json()[u'variables'][0]
         msg = '[%s]' % self.getbreadcrumb()
         msg += '\nHostname:  %s' % (j['Hostname'].encode('utf-8'))
@@ -212,8 +212,9 @@ class DeviceAircon(Menu):
         fcmd = 'http://'
         fcmd += self.ip
         if key != '':
-            requests.post(fcmd, json={"ctrl":key})  # url is cmd Rest API
-        r = requests.get(fcmd)  # get status
+            r = requests.post(fcmd, json={"ctrl":key})  # url is cmd Rest API
+        else:
+            r = requests.get(fcmd)  # get status
         j = r.json()[u'variables'][0]
         msg = '%s' % self.getbreadcrumb()
         msg += '\nHostname:  %s' % j['Hostname'].encode('utf-8')
@@ -225,8 +226,6 @@ class DeviceAircon(Menu):
         return msg
     def menu_di(self)   :
         menu=[]
-        menu.append({'desc':'68', 'name':'/068'})
-        menu.append({'desc':'69', 'name':'/069'})
         menu.append({'desc':'70', 'name':'/070'})
         menu.append({'desc':'71', 'name':'/071'})
         menu.append({'desc':'72', 'name':'/072'})
@@ -234,19 +233,6 @@ class DeviceAircon(Menu):
         menu.append({'desc':'74', 'name':'/074'})
         menu.append({'desc':'75', 'name':'/075'})
         menu.append({'desc':'76', 'name':'/076'})
-        menu.append({'desc':'77', 'name':'/077'})
-        menu.append({'desc':'78', 'name':'/078'})
-        menu.append({'desc':'79', 'name':'/079'})
-        menu.append({'desc':'80', 'name':'/080'})
-        menu.append({'desc':'81', 'name':'/081'})
-        menu.append({'desc':'82', 'name':'/082'})
-        menu.append({'desc':'83', 'name':'/083'})
-        menu.append({'desc':'84', 'name':'/084'})
-        menu.append({'desc':'85', 'name':'/085'})
-        menu.append({'desc':'86', 'name':'/086'})
-        menu.append({'desc':'87', 'name':'/087'})
-        menu.append({'desc':'88', 'name':'/088'})
-        menu.append({'desc':'89', 'name':'/089'})
         return {'desc':'Setting DI...', 'menu':menu}
     def menu_timer(self):
         menu = []
@@ -262,20 +248,20 @@ class DeviceAircon(Menu):
             self.timer = m[1:]
             r = re.match('\d{3}', self.timer)
             if r:
-                self.phase = 'WAITINGDI'
-                return self.menu_di()
+                self.phase = ''
+                key = '1' + self.timer + self.di
+                return self.rcmd(key)
             else: return -1
         elif self.phase == 'WAITINGDI':
             self.di= m[1:]
             r = re.match('\d{3}', self.di)
             if r:
-                self.phase = ''
-                key = '1' + self.timer + self.di
-                return self.rcmd(key)
+                self.phase = 'WAITINGTIMER'
+                return self.menu_timer()
             else: return -1
         elif(m == '/on'):
-            self.phase = 'WAITINGTIMER'
-            return self.menu_timer()
+            self.phase = 'WAITINGDI'
+            return self.menu_di()
         elif(m == '/off'):
             self.phase = ''
             key = '0'
