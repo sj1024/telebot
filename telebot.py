@@ -167,7 +167,7 @@ class DeviceBulb(Menu):
         menu = []
         msg = ''
         d = datetime.datetime.now()
-        for x in range(30, 900, 30):
+        for x in range(30, 540, 30):
             d += datetime.timedelta(minutes=30)
             msg = 'Timer %d : %d (%s %s)' % (x/60, x%60, self.istoday(d.strftime('%H'), d.strftime('%m-%d')), d.strftime('%H:%M'))
             menu.append({'desc':msg, 'name':'/%03d' % (x)})
@@ -238,7 +238,7 @@ class DeviceAircon(Menu):
         menu = []
         msg = ''
         d = datetime.datetime.now()
-        for x in range(30, 900, 30):
+        for x in range(30, 540, 30):
             d += datetime.timedelta(minutes=30)
             msg = 'Timer %d:%d (%s %s)' % (x/60, x%60, self.istoday(d.strftime('%H'), d.strftime('%m-%d')), d.strftime('%H:%M'))
             menu.append({'desc':msg, 'name':'/%03d' % (x)})
